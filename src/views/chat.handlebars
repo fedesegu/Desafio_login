@@ -1,0 +1,11 @@
+<h3>CHAT</h3>
+<form id="chatForm" method="post" action="/api/chat/">
+  <h4 id="usarioName">{{first_name}} {{last_name}}</h4>
+  <input type="text" name="message" id="message" placeholder="Escribe tu mensaje" />
+  <input type="submit" value="SEND" />
+</form>
+
+<div id="chat"></div>
+<script src="/socket.io/socket.io.js"></script>;
+<script src="/src/public/chat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
