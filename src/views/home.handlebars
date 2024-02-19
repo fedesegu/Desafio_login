@@ -1,10 +1,32 @@
-{{#each products}}
-  <h2>{{this.title}}</h2>
-  <p>{{this.description}}</p>
-  <p> {{this.price}}</p>
-  <p> {{this.code}}</p>
-  <p> {{this.category}}</p>
-  <p> {{this.stock}}</p>
-  <p> {{this.thumbnails}}</p>
-  <p> {{this.id}}</p>
-{{/each}}
+{{#if user}}
+    <div class="userDiv">
+        <h2>WELCOME {{name}}</h2>
+        <h4>Your email is: {{email}} </h4>
+        <button class="boton"><a href="/api/session/signout">SIGN OUT</a></button>
+    </div>
+
+{{/if}}
+
+{{#if products.length}}
+    <div class="product-cards">
+        {{#each products}}
+        <div class="product-card">
+            <h4>TITLE: {{title}}</h4>
+            <p>DESCRIPTION: {{description}}</p>
+            <p>PRICE: ${{price}}</p>
+            <p>STOCK: {{stock}}</p>
+            <p>CATEGORY: {{category}}</p>
+            <img src="{{thumbail}}" alt="{{title}}">
+            <button class="boton" id="add-to-cart-btn" data-product-id="{{_id}}" onclick="addProductToCart({{cart}},{{_id}})">Add to Cart</button>
+        </div>
+        {{/each}}
+    </div>
+
+
+    <div class="pagination">
+        <button class="boton" id="prev-page" {{#if prevPage}}data-page="{{prevPage}}"{{/if}}>Previous Page</button>
+        <button class="boton" id="next-page" {{#if nextPage}}data-page="{{nextPage}}"{{/if}}>Next Page</button>
+    </div>
+{{else}}
+    <p>No products available.</p>
+{{/if}} 

@@ -1,97 +1,98 @@
 import { Router } from "express";
-import { manager } from "../DAO/managerFS/productsManager.js";
-import { productsManager } from "../DAO/managerDB/productsManagerDB.js";
-import { usersManager } from "../DAO/managerDB/usersManagerDB.js";
-import { cartsManager } from "../DAO/managerDB/cartsManagerDB.js";
+import { productsManager } from '../dao/mongoDB/productsManagerDB.js'
+import { cartsManager } from '../dao/mongoDB/cartsManagerDB.js'
+
 const router = Router();
 
-router.get("/", async (req, res) => {
-  try {
-    const products = await manager.getProducts({});
-    res.render("home", { response: products });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+router.get("/home", async (req, res) => {
 
-router.get("/realtimeproducts", async (req, res) => {
-  try {
-    res.render("realTimeProducts");
-  } catch (error) {
-    throw new Error(error.message);
-  }
-});
-
-router.get("/products", async (req, res) => {
-  try {
-    const products = await productsManager.findAll(req.query);
-    console.log("products", products);
-    res.render("products", { response: products, style: "product" });
-  } catch (error) {
-    throw new Error(error.message);
-  }
-});
-router.get("/homeuser/:idUser", async (req, res) => {
-  const { idUser } = req.params;
-  const user = await usersManager.findById(idUser);
-  const { first_name, last_name } = user;
-  res.render("homeuser", { first_name, last_name });
-});
-
-router.get("/signup", async (req, res) => {
-  res.render("signup");
-});
-
-router.get("/chat/:idUser", async (req, res) => {
-  const { idUser } = req.params;
-  try {
-    const user = await usersManager.findById(idUser);
-    const { first_name, last_name } = user;
-    res.render("chat", { first_name, last_name });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-router.get("/carts/:idCart", async (req, res) => {
-  const { idCart } = req.params;
-  try {
-    const cart = await cartsManager.findById(idCart);
-    if (!cart) {
-      return res.status(404).send("Cart not founded");
+    if (!req.session.passport) {
+        return res.redirect("/api/views/login");
     }
-    const cartProducts = cart.products.map((doc) => doc.toObject());
+    try {
+        const products = await productsManager.findAll(req.query);
+        const productsFinal = products.info.results;
+        const clonedProducts = productsFinal.map(product => Object.assign({}, product._doc));
+        const result = clonedProducts;
+        const paginate = products.info.pages;
+        const sort = req.query.orders;
+        const cart = await cartsManager.createOne()
 
-    console.log(cartProducts);
-    res.render("cart", { response: cartProducts });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error");
-  }
-});
-router.get("/cart/", async (req, res) => {
-  try {
-    const cart = await cartsManager.findAll();
-    console.log("cart", cart);
-    res.render("cart", { response: cart });
-  } catch (error) {
-    throw new Error(error.message);
-  }
-});
-
-router.get("/login", async (req, res) => {
-  if (req.session.user) {
-    return res.redirect("/api/views/products")
+        console.log(req.user.name);
+        res.render("home",  { user: req.user, name: req.user.name, email : req.user.email, cart: cart._Id, products: result, paginate: paginate, sort: sort, style:"product"} );
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Server internal error");
     }
-  res.render("login")
+});
+
+router.get("/login", (req, res) => {
+        if (req.session.user) {
+            return res.redirect("/home", {style:"product"});}
+    res.render("login", {style:"product"});
+});
+
+router.get("/signup", (req, res) => {
+    if (req.session.user) {
+        return res.redirect("/login", {style:"product"});
+    }
+    res.render("signup", {style:"product"})
+});
+
+router.get("/restaurar", (req, res) => {
+    res.render("restaurar", {style:"product"});
+});
+
+router.get("/error", (req, res) => {
+    res.render("error", {style:"product"});
 });
 
 
-router.get("/signup", async (req, res) => {
-  if (req.session.user) {
-    return res.redirect("/api/views/products")
-  }
-  res.render("sign up")
+router.get('/carts/:cid', async (req, res) => {
+    const { cid } = req.params;
+    
+    try {
+        const cart = await Cart.findById(cid);
+
+        if (!cart) {
+            return res.status(404).send('Cart not found');
+        }
+        const cartProducts = cart.products.map(doc => doc.toObject());
+
+        
+        console.log(cartProducts);
+        res.render('carts', { products:cartProducts, style:"product" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server internal error');
+    }
+});
+
+
+router.get("/changeproducts", async (req, res) => {
+    try {
+    res.render("changeproducts");
+    } catch {
+        error
+    }
+});
+
+
+
+router.get("/realTimeProducts", async (req, res) => {
+    try {
+        const products = await Manager.findAll({});
+        res.render("realTimeProducts", { products:products, style: "product"});
+    } catch {
+        error
+    }
+});
+router.get("/chat", async (req, res) => {
+    try {
+    res.render("chats");
+    } catch {
+        error
+    }
 });
 
 export default router;

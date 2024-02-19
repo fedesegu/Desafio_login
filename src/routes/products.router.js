@@ -1,70 +1,94 @@
-import { Router } from "express";
-import { productsManager } from "../DAO/managerDB/productsManagerDB.js";
+import {Router} from 'express'
+import { __dirname } from "../utils.js"
+import { productsManager } from '../dao/mongoDB/productsManagerDB.js'
+
 const router = Router();
 
-router.get("/agg", async (req, res) => {
-  try {
-    const product = await productsManager.findAggre();
-    res.status(200).json({ message: "Product", product });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
 router.get("/", async (req, res) => {
-  try {
-    const product = await productsManager.findAll(req.query);
-    res.status(200).json({ message: "Product", product });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+    
+    try {
+        const products = await productsManager.findAll(req.query); 
+        res.status(200).json({ message: "Product found", products });   
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 });
 
-router.get("/:idProduct", async (req, res) => {
-  const { idProduct } = req.params;
-  try {
-    const product = await productsManager.findById(idProduct);
-    res.status(200).json({ message: "Product", product });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
+router.get("/:pid", async (req, res) => {
+    const { pid } = req.params;
+    try {
+        const product = await productsManager.findById(pid);
+        if (!product) {
+            return res
+            .status(404)
+            .json({ message: "Product not found with the id provided" });
+        }
+        res.status(200).json({ message: "Product found", product });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    });
+""
 router.post("/", async (req, res) => {
-  const { name, price, description, category, code } = req.body;
-  if (!name || !price || !description || !category || !code) {
-    return res.status(400).json({ message: "Some data is missing" });
-  }
-  try {
-    const createdProduct = await productsManager.createOne(req.body);
-    res
-      .status(200)
-      .json({ message: "Product Created", product: createdProduct });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+    const { title, description, price, code, stock, category } = req.body;
+
+    if (!title || !description || !price || !code || !stock || ! category) {
+        return res.status(400).json({ message: "Some data is missing" });
+    }
+    try {
+        const response = await productsManager.createOne(req.body);
+        res.status(200).json({ message: "Product created", response });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+router.delete("/:pid", async (req, res) => {
+    const { pid } = req.params;
+    try {
+        const response = await productsManager.deleteOne(pid);
+        if (!response) {
+            return res
+            .status(404)
+            .json({ message: "Product not found with the id provided" });
+        }
+        res.status(200).json({ message: "Product deleted" });
+        } catch (error) {
+        res.status(500).json({ message: error.message });
+        }
+    });
+router.put("/:pid", async (req, res) => {
+    const { pid } = req.params;
+    try {
+        const response = await productsManager.updateOne(pid, req.body);
+        if (!response) {
+            return res
+            .status(404)
+            .json({ message: "Product not found with the id provided" });
+        }
+        res.status(200).json({ message: "Product updated", response });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 });
 
-router.delete("/:idProduct", async (req, res) => {
-  const { idProduct } = req.params;
-  try {
-    await productsManager.deleteOne(idProduct);
-    res.status(200).json({ message: "Product deleted" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+router.post("/change", async (req, res) => {
+    const accion = req.body.accion;
+    const id = req.body.id;
+
+    try {
+        if (accion === "AGREGAR") {
+            const productNew = productsManager.createOne(req.body);
+        } 
+        else {
+            productsManager.deleteOne(+id);
+        }
+        res.status(200).send("Succesfull operation");
+
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).send("Server internal error");
+    }
 });
 
-router.put("/:idProduct", async (req, res) => {
-  const { idProduct } = req.params;
-  try {
-    const productUpdated = await productsManager.updateOne(
-      idProduct,
-      req.body
-    );
-    res.status(200).json({ message: "Product updated" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-export default router;
+
+export default router

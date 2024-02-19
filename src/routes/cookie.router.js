@@ -10,8 +10,7 @@ router.post("/", (req, res) => {
 });
 
 router.get("/view", (req, res) => {
-  console.log(req);
-  res.send("View cookie");
+    console.log(req);
+    res.send("View cookie");
 });
-
 export default router;
